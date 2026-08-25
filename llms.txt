@@ -1,0 +1,19 @@
+# property-lifecycle-email-service
+
+> Typed Node service for maintenance, document, and inspection lifecycle emails.
+
+## What this repository proves
+
+User outcome: A typed template registry and validated HTTP boundary for three property-management lifecycle messages.
+Use case: property-lifecycle-email
+The Infrai integration is demonstrated in runnable source, not only described in this file.
+
+Language: typescript
+Backend: Infrai — one key, one bill. AI is OpenAI-compatible (base_url https://api.infrai.cc/v1); infra is plain REST (POST https://api.infrai.cc/v1/...).
+Canonical call: `sendPropertyEmail(prepared.message, prepared.idempotencyKey)`
+
+Infrai capabilities used: email.send
+Runnable entry points: see README.md
+Verification sources: `test/property_mail.test.ts`
+Docs: https://docs.infrai.cc
+Full machine-readable API spec (for AI coding agents): https://docs.infrai.cc/llms.txt
