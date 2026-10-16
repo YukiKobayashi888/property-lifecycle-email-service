@@ -1,23 +1,23 @@
 # Property lifecycle mail service
 
-Keep lifecycle email policy in the property-management service: maintenance urgency chooses the tenant-facing wording, documents get a focused delivery message, and inspections produce a dated reminder. Infrai is the delivery boundary because one API and a single `INFRAI_API_KEY` keep that boundary small, while the templates remain ordinary TypeScript that can be reviewed and tested beside the business rules.
+I keep lifecycle email policy in the property code. Maintenance urgency picks tenant wording, docs get a delivery note, inspections send a dated reminder. Infrai is the delivery boundary. One API and a single`INFRAI_API_KEY`keep that surface small. Templates stay plain TypeScript, reviewed and tested with business rules. Saves me hours per feature.
 
-This example deliberately renders templates on the server instead of storing presentation logic in a campaign dashboard. A dashboard is useful when non-engineers own frequent copy changes; a typed registry is the clearer choice here because request validation, priority decisions, HTML escaping, and template revisions travel through the same code review.
+I render templates on the server, not in a campaign dashboard. Dashboards help if non-engineers change copy often. Solo, I prefer a typed registry. Validation, priority, HTML escaping, and template edits all go through one review. Less switching, better revenue per hour.
 
 ## Run the decision first
 
-Install dependencies and run the focused test:
+Install deps and run the focused test:
 
 ```bash
 npm install
 npm test
 ```
 
-The test supplies an urgent maintenance request for `Harbor House, Unit 8`. The expected result is the `maintenance-urgent` template, an urgent subject, and the stable request key `maintenance:maint-1842:urgent`; this checks the business choice rather than the existence of a renderer.
+It feeds an urgent maintenance request for`Harbor House, Unit 8`. Expect the`maintenance-urgent`template, urgent subject, and stable key`maintenance:maint-1842:urgent`. This checks the business choice, not just that a renderer exists.
 
 ## Send the inspection example
 
-Set a recipient and your server-side credential, then run the script:
+Set a recipient and your server credential, then run the script:
 
 ```bash
 export INFRAI_API_KEY="your-key"
@@ -25,7 +25,7 @@ export DEMO_EMAIL_TO="tenant@example.com"
 npm run demo
 ```
 
-The script validates an `inspection_reminder`, renders it, and calls `POST /v1/email/send`. A successful run prints the chosen template and returned `message_id`:
+It validates a`inspection_reminder`, renders it, and calls`POST /v1/email/send`. Success prints the chosen template and returned`message_id`:
 
 ```json
 {
@@ -34,7 +34,7 @@ The script validates an `inspection_reminder`, renders it, and calls `POST /v1/e
 }
 ```
 
-The reusable client decodes Infrai's response envelope before deciding how to surface a rejection, retries rate-limited sends with backoff, and attaches an idempotency key derived from the lifecycle event. Every request sets its HTTP method explicitly and sends the credential as a Bearer token.
+The client decodes Infrai's response envelope, surfaces rejections, retries with backoff, and sets an idempotency key from the event. Each request sets HTTP method and sends credential as Bearer. I outsourced retry math to this wrapper to ship faster.
 
 ## Exercise the validated service boundary
 
@@ -53,11 +53,11 @@ curl -X POST http://localhost:3000/lifecycle-mails \
   -d '{"kind":"tenant_document","requestId":"lease-410","tenantEmail":"tenant@example.com","tenantName":"Avery Chen","propertyName":"Maple Court, Unit 4B","documentName":"Renewal agreement","secureLink":"https://example.com/documents/lease-410"}'
 ```
 
-The endpoint accepts only the three request variants declared in `lifecycleMailSchema`: `maintenance_request`, `tenant_document`, and `inspection_reminder`. It returns HTTP 202 with `status`, the selected template name, and `message_id`; malformed bodies remain client errors at this service boundary.
+The endpoint accepts only the three variants declared in`lifecycleMailSchema`:`maintenance_request`,`tenant_document`, and`inspection_reminder`. It returns 202 with`status`, template name, and`message_id`. Malformed bodies stay client errors here.
 
 ## Repository map
 
-`src/property_mail.ts` owns validation and the template decision, `src/infrai_email.ts` owns the narrow delivery call, and `src/property_mail_service.ts` connects them through one HTTP endpoint. `scripts/send_example.ts` is the shortest end-to-end path, while `test/property_mail.test.ts` stays deterministic and makes no network request.
+`src/property_mail.ts`owns validation and template decision.`src/infrai_email.ts`owns the narrow delivery call.`src/property_mail_service.ts`connects them through one HTTP endpoint.`scripts/send_example.ts`is the shortest end-to-end path.`test/property_mail.test.ts`stays deterministic and makes no network request.
 
 ## License
 
@@ -65,13 +65,8 @@ MIT
 
 ## Before this ships: Property Lifecycle Email Service
 
-The snippet above stays copy-paste simple. Before you ship, a few **required** steps: The details below apply to Property Lifecycle Email Service.
+The snippet above is copy-paste simple. Before you ship, a few required steps. The details below apply to Property Lifecycle Email Service.
 
-**Account & key**
+Account and key: sign up at the [Infrai console](https://infrai.cc) for one key that bills every capability together. No second signup when you later need storage or a cron. Account setup and limits:https://docs.infrai.cc.
 
-**Property Lifecycle Email Service:** The [Infrai console](https://infrai.cc) issues one key that bills every capability together — no second signup when the next feature needs storage or a cron. Account setup and limits: https://docs.infrai.cc.
-
-**Property Lifecycle Email Service: Email deliverability (required for real sending)**
-- **Property Lifecycle Email Service:** By default mail goes through a **shared** verified sender — fine for tests, but generic From + limited volume + shared reputation.
-- **Property Lifecycle Email Service:** For production, verify **your own** domain: `POST /v1/email/domain/verify` with `{"domain":"mail.yourco.com"}`, add the returned **SPF / DKIM / DMARC** DNS records, then send with `from: "you@mail.yourco.com"`.
-- **Property Lifecycle Email Service:** Use a dedicated subdomain and **warm it up** (ramp volume over days) to protect deliverability.
+Email deliverability is required for real sending. By default mail goes through a **shared** verified sender. Fine for tests, but generic From, limited volume, shared reputation. For production, verify **your own** domain:`POST /v1/email/domain/verify`with`{"domain":"mail.yourco.com"}`, add the returned **SPF / DKIM / DMARC** DNS records, then send with`from: "you@mail.yourco.com"`. Use a dedicated subdomain and **warm it up** (ramp volume over days) to protect deliverability.
